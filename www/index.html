@@ -1,86 +1,113 @@
-<!DOCTYPE html>
-<html lang="tr">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Gold Clicker</title>
-    <style>
-        * { margin: 0; padding: 0; box-sizing: border-box; }
-        body {
-            background: #1a1a2e;
-            color: #ffd700;
-            font-family: Arial, sans-serif;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            min-height: 100vh;
-            padding: 20px;
-        }
-        h1 { font-size: 2rem; margin-bottom: 10px; text-shadow: 0 0 20px #ffd700; }
-        #score { font-size: 1.5rem; margin-bottom: 5px; }
-        #per-click { font-size: 1rem; margin-bottom: 30px; color: #ffaa00; }
-        #coin {
-            width: 180px; height: 180px;
-            background: radial-gradient(circle at 35% 35%, #ffe066, #ffd700, #b8860b);
-            border-radius: 50%;
-            border: 6px solid #b8860b;
-            cursor: pointer;
-            box-shadow: 0 0 40px #ffd70088;
-            transition: transform 0.1s;
-            display: flex; align-items: center; justify-content: center;
-            font-size: 4rem;
-            user-select: none;
-        }
-        #coin:active { transform: scale(0.92); }
-        h2 { margin-top: 40px; margin-bottom: 15px; font-size: 1.3rem; }
-        .upgrade {
-            background: #16213e;
-            border: 2px solid #ffd700;
-            border-radius: 12px;
-            padding: 15px 20px;
-            width: 320px;
-            margin-bottom: 12px;
-            cursor: pointer;
-            transition: background 0.2s;
-        }
-        .upgrade:hover { background: #0f3460; }
-        .upgrade h3 { font-size: 1rem; margin-bottom: 5px; }
-        .upgrade p { font-size: 0.85rem; color: #ffaa00; }
-        .upgrade .cost { font-size: 0.9rem; color: #ffd700; margin-top: 5px; }
-        .leaderboard-item {
-            display: flex;
-            justify-content: space-between;
-            background: #16213e;
-            border: 1px solid #ffd700;
-            border-radius: 8px;
-            padding: 10px 15px;
-            margin-bottom: 8px;
-            width: 320px;
-        }
-    </style>
-</head>
-<body>
-    <h1>💰 Gold Clicker</h1>
-    <div id="score">Puan: 0</div>
-    <div id="per-click">Her tıkta: 1 puan | Otomatik: 0/sn</div>
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+import { getFirestore, doc, setDoc, collection, query, orderBy, limit, onSnapshot } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 
-    <div id="coin">🪙</div>
+// Ekranın kapanmasını engelle
+if ('wakeLock' in navigator) {
+    navigator.wakeLock.request('screen').catch(() => {});
+}
 
-    <h2>⬆️ Yükseltmeler</h2>
-    <div class="upgrade" id="upgrade-click">
-        <h3>👆 Tıklama Gücü</h3>
-        <p>Her tıkta +1 puan daha kazan</p>
-        <div class="cost" id="upgrade-click-cost">💰 Maliyet: 50 puan (Seviye 0)</div>
-    </div>
-    <div class="upgrade" id="upgrade-auto">
-        <h3>🤖 Otomatik Madenci</h3>
-        <p>Saniyede otomatik puan kazan</p>
-        <div class="cost" id="upgrade-auto-cost">💰 Maliyet: 100 puan (Seviye 0)</div>
-    </div>
+const firebaseConfig = {
+  apiKey: "AIzaSyB3DgeOTZMHClqzRsKuhnxBVDNaVUq9RHk",
+  authDomain: "gold-clicker-bf955.firebaseapp.com",
+  projectId: "gold-clicker-bf955",
+  storageBucket: "gold-clicker-bf955.firebasestorage.app",
+  messagingSenderId: "44920202750",
+  appId: "1:44920202750:web:d827228faaf585d72d4caf"
+};
 
-    <h2>🏆 Sıralama</h2>
-    <div id="leaderboard-list"></div>
+const app = initializeApp(firebaseConfig);
+const db = getFirestore(app);
 
-    <script type="module" src="game.js"></script>
-</body>
-</html>
+let score = 0;
+let clickPower = 1;
+let autoRate = 0;
+let clickUpgradeCost = 50;
+let autoUpgradeCost = 100;
+let clickUpgradeLevel = 0;
+let autoBought = false;
+let lastClick = 0;
+let playerName = '';
+
+const scoreEl = document.getElementById('score');
+const perClickEl = document.getElementById('per-click');
+const coin = document.getElementById('coin');
+const clickCostEl = document.getElementById('upgrade-click-cost');
+const autoCostEl = document.getElementById('upgrade-auto-cost');
+
+playerName = prompt('Kullanıcı adını gir:') || 'Anonim';
+
+coin.addEventListener('click', () => {
+    const now = Date.now();
+    if (now - lastClick < 1000) return;
+    lastClick = now;
+    score += clickPower;
+    updateUI();
+    saveScore();
+});
+
+document.getElementById('upgrade-click').addEventListener('click', () => {
+    if (score >= clickUpgradeCost) {
+        score -= clickUpgradeCost;
+        clickPower++;
+        clickUpgradeLevel++;
+        clickUpgradeCost = Math.floor(clickUpgradeCost * 1.8);
+        updateUI();
+        saveScore();
+    }
+});
+
+document.getElementById('upgrade-auto').addEventListener('click', () => {
+    if (!autoBought && score >= autoUpgradeCost) {
+        score -= autoUpgradeCost;
+        autoRate = 1;
+        autoBought = true;
+        document.getElementById('upgrade-auto').style.opacity = '0.5';
+        document.getElementById('upgrade-auto').style.cursor = 'default';
+        updateUI();
+        saveScore();
+    }
+});
+
+setInterval(() => {
+    if (autoRate > 0) {
+        score += autoRate;
+        updateUI();
+        saveScore();
+    }
+}, 1000);
+
+function updateUI() {
+    scoreEl.textContent = `Puan: ${score.toLocaleString()}`;
+    perClickEl.textContent = `Her tıkta: ${clickPower} puan | Otomatik: ${autoRate}/sn`;
+    clickCostEl.textContent = `💰 Maliyet: ${clickUpgradeCost.toLocaleString()} puan (Seviye ${clickUpgradeLevel})`;
+    autoCostEl.textContent = autoBought ? '✅ Satın Alındı' : `💰 Maliyet: ${autoUpgradeCost.toLocaleString()} puan`;
+}
+
+async function saveScore() {
+    try {
+        await setDoc(doc(db, 'leaderboard', playerName), {
+            name: playerName,
+            score: score,
+            updatedAt: new Date()
+        });
+    } catch (e) {
+        console.error('Kayıt hatası:', e);
+    }
+}
+
+const q = query(collection(db, 'leaderboard'), orderBy('score', 'desc'), limit(10));
+onSnapshot(q, (snapshot) => {
+    const leaderboardEl = document.getElementById('leaderboard-list');
+    leaderboardEl.innerHTML = '';
+    let rank = 1;
+    snapshot.forEach((doc) => {
+        const data = doc.data();
+        const item = document.createElement('div');
+        item.className = 'leaderboard-item';
+        item.innerHTML = `<span>${rank}. ${data.name}</span><span>${data.score.toLocaleString()} 💰</span>`;
+        leaderboardEl.appendChild(item);
+        rank++;
+    });
+});
+Copy-Item game.js -Destination www\game.js
+Copy-Item index.html -Destination www\index.html

@@ -19,7 +19,8 @@ let autoRate = 0;
 let clickUpgradeCost = 50;
 let autoUpgradeCost = 100;
 let clickUpgradeLevel = 0;
-let autoUpgradeLevel = 0;
+let autoBought = false;
+let lastClick = 0;
 let playerName = '';
 
 const scoreEl = document.getElementById('score');
@@ -28,10 +29,12 @@ const coin = document.getElementById('coin');
 const clickCostEl = document.getElementById('upgrade-click-cost');
 const autoCostEl = document.getElementById('upgrade-auto-cost');
 
-// Oyuncu adı al
 playerName = prompt('Kullanıcı adını gir:') || 'Anonim';
 
 coin.addEventListener('click', () => {
+    const now = Date.now();
+    if (now - lastClick < 1000) return;
+    lastClick = now;
     score += clickPower;
     updateUI();
     saveScore();
@@ -49,11 +52,12 @@ document.getElementById('upgrade-click').addEventListener('click', () => {
 });
 
 document.getElementById('upgrade-auto').addEventListener('click', () => {
-    if (score >= autoUpgradeCost) {
+    if (!autoBought && score >= autoUpgradeCost) {
         score -= autoUpgradeCost;
-        autoRate++;
-        autoUpgradeLevel++;
-        autoUpgradeCost = Math.floor(autoUpgradeCost * 1.8);
+        autoRate = 1;
+        autoBought = true;
+        document.getElementById('upgrade-auto').style.opacity = '0.5';
+        document.getElementById('upgrade-auto').style.cursor = 'default';
         updateUI();
         saveScore();
     }
@@ -71,7 +75,7 @@ function updateUI() {
     scoreEl.textContent = `Puan: ${score.toLocaleString()}`;
     perClickEl.textContent = `Her tıkta: ${clickPower} puan | Otomatik: ${autoRate}/sn`;
     clickCostEl.textContent = `💰 Maliyet: ${clickUpgradeCost.toLocaleString()} puan (Seviye ${clickUpgradeLevel})`;
-    autoCostEl.textContent = `💰 Maliyet: ${autoUpgradeCost.toLocaleString()} puan (Seviye ${autoUpgradeLevel})`;
+    autoCostEl.textContent = autoBought ? '✅ Satın Alındı' : `💰 Maliyet: ${autoUpgradeCost.toLocaleString()} puan`;
 }
 
 async function saveScore() {
@@ -86,7 +90,6 @@ async function saveScore() {
     }
 }
 
-// Gerçek zamanlı sıralama
 const q = query(collection(db, 'leaderboard'), orderBy('score', 'desc'), limit(10));
 onSnapshot(q, (snapshot) => {
     const leaderboardEl = document.getElementById('leaderboard-list');
