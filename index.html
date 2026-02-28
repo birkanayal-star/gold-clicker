@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gold Clicker</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            background: #1a1a2e;
+            color: #ffd700;
+            font-family: Arial, sans-serif;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            min-height: 100vh;
+            padding: 20px;
+        }
+        h1 { font-size: 2rem; margin-bottom: 10px; text-shadow: 0 0 20px #ffd700; }
+        #score { font-size: 1.5rem; margin-bottom: 5px; }
+        #per-click { font-size: 1rem; margin-bottom: 30px; color: #ffaa00; }
+        #coin {
+            width: 180px; height: 180px;
+            background: radial-gradient(circle at 35% 35%, #ffe066, #ffd700, #b8860b);
+            border-radius: 50%;
+            border: 6px solid #b8860b;
+            cursor: pointer;
+            box-shadow: 0 0 40px #ffd70088;
+            transition: transform 0.1s;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 4rem;
+            user-select: none;
+        }
+        #coin:active { transform: scale(0.92); }
+        h2 { margin-top: 40px; margin-bottom: 15px; font-size: 1.3rem; }
+        .upgrade {
+            background: #16213e;
+            border: 2px solid #ffd700;
+            border-radius: 12px;
+            padding: 15px 20px;
+            width: 320px;
+            margin-bottom: 12px;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+        .upgrade:hover { background: #0f3460; }
+        .upgrade h3 { font-size: 1rem; margin-bottom: 5px; }
+        .upgrade p { font-size: 0.85rem; color: #ffaa00; }
+        .upgrade .cost { font-size: 0.9rem; color: #ffd700; margin-top: 5px; }
+        .leaderboard-item {
+            display: flex;
+            justify-content: space-between;
+            background: #16213e;
+            border: 1px solid #ffd700;
+            border-radius: 8px;
+            padding: 10px 15px;
+            margin-bottom: 8px;
+            width: 320px;
+        }
+    </style>
+</head>
+<body>
+    <h1>💰 Gold Clicker</h1>
+    <div id="score">Puan: 0</div>
+    <div id="per-click">Her tıkta: 1 puan | Otomatik: 0/sn</div>
+
+    <div id="coin">🪙</div>
+
+    <h2>⬆️ Yükseltmeler</h2>
+    <div class="upgrade" id="upgrade-click">
+        <h3>👆 Tıklama Gücü</h3>
+        <p>Her tıkta +1 puan daha kazan</p>
+        <div class="cost" id="upgrade-click-cost">💰 Maliyet: 50 puan (Seviye 0)</div>
+    </div>
+    <div class="upgrade" id="upgrade-auto">
+        <h3>🤖 Otomatik Madenci</h3>
+        <p>Saniyede otomatik puan kazan</p>
+        <div class="cost" id="upgrade-auto-cost">💰 Maliyet: 100 puan (Seviye 0)</div>
+    </div>
+
+    <h2>🏆 Sıralama</h2>
+    <div id="leaderboard-list"></div>
+
+    <script type="module" src="game.js"></script>
+</body>
+</html>

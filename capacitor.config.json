@@ -1,0 +1,8 @@
+{
+  "appId": "com.goldclicker.app",
+  "appName": "Gold Clicker",
+  "webDir": "www",
+  "server": {
+    "androidScheme": "https"
+  }
+}
