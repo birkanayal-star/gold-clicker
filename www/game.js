@@ -1,6 +1,10 @@
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
 import { getFirestore, doc, setDoc, collection, query, orderBy, limit, onSnapshot } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 
+if ('wakeLock' in navigator) {
+    navigator.wakeLock.request('screen').catch(() => {});
+}
+
 const firebaseConfig = {
   apiKey: "AIzaSyB3DgeOTZMHClqzRsKuhnxBVDNaVUq9RHk",
   authDomain: "gold-clicker-bf955.firebaseapp.com",
